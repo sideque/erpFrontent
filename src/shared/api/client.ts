@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import toast from 'react-hot-toast';
 
-const baseURL = import.meta.env.VITE_API_URL || '/api';
+const baseURL = import.meta.env.VITE_API_URL || 'https://erpbackent-1.onrender.com/api';
 
 export const api = axios.create({
   baseURL,
