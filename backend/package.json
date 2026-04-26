@@ -7,7 +7,19 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "seed": "node src/seed/seed.js"
+    "seed": "node src/seed/cli.js full",
+    "seed:all": "node src/seed/cli.js full",
+    "seedall": "node src/seed/cli.js full",
+    "seed:users": "node src/seed/cli.js users",
+    "seed:owners": "node src/seed/cli.js owners",
+    "seed:tenants": "node src/seed/cli.js tenants",
+    "seed:properties": "node src/seed/cli.js properties",
+    "seed:contracts": "node src/seed/cli.js contracts",
+    "seed:payments": "node src/seed/cli.js payments",
+    "seed:expenses": "node src/seed/cli.js expenses",
+    "seed:maintenance": "node src/seed/cli.js maintenance",
+    "seed:leads": "node src/seed/cli.js leads",
+    "seed:help": "node src/seed/cli.js list"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
