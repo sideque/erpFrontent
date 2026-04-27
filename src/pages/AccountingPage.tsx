@@ -528,7 +528,7 @@ function JournalEntriesTab({ onNew, canCreate }: { onNew: () => void; canCreate:
         <table className="min-w-full">
           <thead><tr>
             <th className="px-3 py-2 text-left table-header">Number</th>
-            <th className="px-3 py-2 text-left table-header">Type</th>
+            <th className="px-3 py-2 text-left table-header">Type</th> 
             <th className="px-3 py-2 text-left table-header">Date</th>
             <th className="px-3 py-2 text-left table-header">Title / Memo</th>
             <th className="px-3 py-2 text-right table-header">Total</th>
