@@ -515,7 +515,7 @@ function JournalEntriesTab({ onNew, canCreate }: { onNew: () => void; canCreate:
         {canCreate && (
           <button className="btn-primary ml-auto" onClick={() => navigate("/accounting/journal-entry")}>
             <Plus size={16} /> New Journal Entry
-          </button>
+          </button> 
         )}
       </Card>
 
