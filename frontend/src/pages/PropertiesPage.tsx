@@ -1,13 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Building2, MapPin, BedDouble } from 'lucide-react';
-import { useProperties, usePropertySummary } from '@entities/index';
+import { Plus, Search, Building2, MapPin, BedDouble, ImagePlus } from 'lucide-react';
+import { useProperties, usePropertySummary, useUploadPropertyImage, MAX_PROPERTY_IMAGES, type Property } from '@entities/index';
 import { PageHeader } from '@shared/ui/PageHeader';
 import { Card } from '@shared/ui/Card';
 import { StatusBadge } from '@shared/ui/Badge';
 import { formatAed, formatNumber } from '@shared/lib/format';
+import { publicAssetUrl } from '@shared/lib/publicAssetUrl';
 import { CreatePropertyModal } from '@features/property/CreatePropertyModal';
-import { Can } from '@shared/auth/useCan';
+import { ImageCropModal } from '@features/property/ImageCropModal';
+import { Can, useCan } from '@shared/auth/useCan';
 
 export function PropertiesPage() {
   const nav = useNavigate();
@@ -15,10 +17,42 @@ export function PropertiesPage() {
   const [type, setType] = useState('');
   const [status, setStatus] = useState('');
   const [open, setOpen] = useState(false);
+  const [cropOpen, setCropOpen] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [uploadPropertyId, setUploadPropertyId] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const uploadImg = useUploadPropertyImage();
+  const canEdit = useCan('property.edit');
 
   const params = useMemo(() => ({ q, type, status, limit: 50 }), [q, type, status]);
   const { data } = useProperties(params);
   const { data: summary } = usePropertySummary();
+
+  const startPickForProperty = (propertyId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setUploadPropertyId(propertyId);
+    fileRef.current?.click();
+  };
+
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    if (!f || !f.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropSrc(reader.result as string);
+      setCropOpen(true);
+    };
+    reader.onerror = () => setUploadPropertyId(null);
+    reader.readAsDataURL(f);
+  };
+
+  const onCropped = (file: File) => {
+    if (uploadPropertyId) {
+      void uploadImg.mutateAsync({ id: uploadPropertyId, file });
+    }
+  };
 
   return (
     <>
@@ -59,42 +93,87 @@ export function PropertiesPage() {
         </select>
       </div>
 
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={onFileChange}
+      />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {data?.data?.map((p: any) => (
-          <button
-            key={p._id}
-            onClick={() => nav(`/properties/${p._id}`)}
-            className="card text-left overflow-hidden p-0 hover:shadow-pop transition group"
-          >
+        {data?.data?.map((p: Property) => {
+          const imgCount = p.images?.length ?? 0;
+          const atLimit = imgCount >= MAX_PROPERTY_IMAGES;
+          return (
             <div
-              className="h-36 bg-slate-200 bg-cover bg-center"
-              style={{ backgroundImage: p.images?.[0] ? `url(${p.images[0]})` : undefined }}
-            />
-            <div className="p-4">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-bold text-brand-700 tracking-wider">{p.code}</span>
-                <StatusBadge status={p.status} />
-              </div>
-              <h3 className="mt-1 text-base font-semibold text-ink-900 truncate">{p.name}</h3>
-              <div className="mt-1 text-xs text-ink-500 flex items-center gap-1.5">
-                <MapPin size={12} /> {p.location?.area || '—'}, {p.location?.city || 'Dubai'}
-              </div>
-              <div className="mt-3 flex items-center gap-3 text-xs text-ink-600">
-                <span className="inline-flex items-center gap-1"><Building2 size={12} /> {p.type}</span>
-                {p.bedrooms ? <span className="inline-flex items-center gap-1"><BedDouble size={12} /> {p.bedrooms} BR</span> : null}
-                <span>{formatNumber(p.sizeSqm)} sqm</span>
-              </div>
-              <div className="mt-3 flex items-center justify-between">
-                <span className="text-sm font-bold text-ink-900">{formatAed(p.rentEstimate)}<span className="text-xs text-ink-500 font-normal">/yr</span></span>
-                <span className="text-xs text-ink-400">{p.owners?.length || 0} owner(s)</span>
+              key={p._id}
+              className="card text-left overflow-hidden p-0 hover:shadow-pop transition group relative"
+            >
+              {canEdit && !atLimit && (
+                <button
+                  type="button"
+                  className="absolute right-2 top-2 z-10 flex items-center gap-1 rounded-lg bg-white/90 px-2 py-1.5 text-xs font-medium text-ink-800 shadow border border-line hover:bg-white"
+                  onClick={(e) => startPickForProperty(p._id, e)}
+                  title="Add photo (crop)"
+                >
+                  <ImagePlus size={14} />
+                  Photo
+                </button>
+              )}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => nav(`/properties/${p._id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    nav(`/properties/${p._id}`);
+                  }
+                }}
+                className="cursor-pointer text-left w-full"
+              >
+                <div
+                  className="h-36 bg-slate-200 bg-cover bg-center"
+                  style={{ backgroundImage: p.images?.[0] ? `url(${publicAssetUrl(p.images[0])})` : undefined }}
+                />
+                <div className="p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-bold text-brand-700 tracking-wider">{p.code}</span>
+                    <StatusBadge status={p.status} />
+                  </div>
+                  <h3 className="mt-1 text-base font-semibold text-ink-900 truncate">{p.name}</h3>
+                  <div className="mt-1 text-xs text-ink-500 flex items-center gap-1.5">
+                    <MapPin size={12} /> {p.location?.area || '—'}, {p.location?.city || 'Dubai'}
+                  </div>
+                  <div className="mt-3 flex items-center gap-3 text-xs text-ink-600">
+                    <span className="inline-flex items-center gap-1"><Building2 size={12} /> {p.type}</span>
+                    {p.bedrooms ? <span className="inline-flex items-center gap-1"><BedDouble size={12} /> {p.bedrooms} BR</span> : null}
+                    <span>{formatNumber(p.sizeSqm)} sqm</span>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between">
+                    <span className="text-sm font-bold text-ink-900">{formatAed(p.rentEstimate)}<span className="text-xs text-ink-500 font-normal">/yr</span></span>
+                    <span className="text-xs text-ink-400">{(p.owners?.length ?? 0) || 0} owner(s)</span>
+                  </div>
+                </div>
               </div>
             </div>
-          </button>
-        ))}
+          );
+        })}
         {data?.data?.length === 0 && <Card className="lg:col-span-3 text-center text-ink-500">No properties found.</Card>}
       </div>
 
       <CreatePropertyModal open={open} onClose={() => setOpen(false)} />
+      <ImageCropModal
+        open={cropOpen}
+        onClose={() => {
+          setCropOpen(false);
+          setCropSrc(null);
+          setUploadPropertyId(null);
+        }}
+        imageSrc={cropSrc}
+        onCropped={onCropped}
+      />
     </>
   );
 }

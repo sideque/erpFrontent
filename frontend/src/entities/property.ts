@@ -67,3 +67,35 @@ export const useDeleteProperty = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['properties'] }),
   });
 };
+
+export const MAX_PROPERTY_IMAGES = 8;
+
+export const useUploadPropertyImage = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, file }: { id: string; file: File }) => {
+      const form = new FormData();
+      form.append('image', file);
+      const { data } = await api.post(`/properties/${id}/images`, form);
+      return data.data as Property;
+    },
+    onSuccess: (_d, { id }) => {
+      qc.invalidateQueries({ queryKey: ['properties'] });
+      qc.invalidateQueries({ queryKey: ['property', id] });
+    },
+  });
+};
+
+export const useDeletePropertyImage = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, url }: { id: string; url: string }) => {
+      const { data } = await api.delete(`/properties/${id}/images`, { data: { url } });
+      return data.data as Property;
+    },
+    onSuccess: (_d, { id }) => {
+      qc.invalidateQueries({ queryKey: ['properties'] });
+      qc.invalidateQueries({ queryKey: ['property', id] });
+    },
+  });
+};

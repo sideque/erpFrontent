@@ -1,18 +1,51 @@
+import { useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, MapPin, Building2, BedDouble, Bath, Maximize2, Users } from 'lucide-react';
-import { useProperty, useTenancyContracts, useInvoices } from '@entities/index';
+import { ArrowLeft, MapPin, Building2, BedDouble, Bath, Maximize2, Users, ImagePlus, X } from 'lucide-react';
+import {
+  useProperty,
+  useTenancyContracts,
+  useInvoices,
+  useUploadPropertyImage,
+  useDeletePropertyImage,
+  MAX_PROPERTY_IMAGES,
+} from '@entities/index';
+import { ImageCropModal } from '@features/property/ImageCropModal';
+import { Can, useCan } from '@shared/auth/useCan';
 import { PageHeader } from '@shared/ui/PageHeader';
 import { Card, CardHeader } from '@shared/ui/Card';
 import { Avatar } from '@shared/ui/Avatar';
 import { StatusBadge } from '@shared/ui/Badge';
 import { PageLoader } from '@shared/ui/Spinner';
 import { formatAed, formatDate, formatNumber } from '@shared/lib/format';
+import { publicAssetUrl } from '@shared/lib/publicAssetUrl';
 
 export function PropertyDetailsPage() {
   const { id } = useParams();
   const { data: p, isLoading } = useProperty(id);
   const { data: contracts } = useTenancyContracts({ property: id, limit: 5 });
   const { data: invoices } = useInvoices({ property: id, limit: 8 });
+  const uploadImg = useUploadPropertyImage();
+  const delImg = useDeletePropertyImage();
+  const canEdit = useCan('property.edit');
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [cropOpen, setCropOpen] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+
+  const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    if (!f || !f.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropSrc(reader.result as string);
+      setCropOpen(true);
+    };
+    reader.readAsDataURL(f);
+  };
+
+  const onCropped = (file: File) => {
+    if (id) void uploadImg.mutateAsync({ id, file });
+  };
 
   if (isLoading || !p) return <PageLoader />;
 
@@ -30,8 +63,38 @@ export function PropertyDetailsPage() {
         <Card className="lg:col-span-2 p-0 overflow-hidden">
           <div
             className="h-72 bg-slate-200 bg-cover bg-center"
-            style={{ backgroundImage: p.images?.[0] ? `url(${p.images[0]})` : undefined }}
+            style={{ backgroundImage: p.images?.[0] ? `url(${publicAssetUrl(p.images[0])})` : undefined }}
           />
+          <div className="px-4 pt-3 pb-1 border-b border-line">
+            <div className="text-xs font-medium text-ink-600 mb-2">Photos</div>
+            <div className="flex flex-wrap gap-2 items-center pb-2">
+              <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onPickFile} />
+              {(p.images || []).map((url) => (
+                <div key={url} className="relative w-16 h-16 rounded-lg overflow-hidden border border-line group shrink-0">
+                  <img src={publicAssetUrl(url)} alt="" className="w-full h-full object-cover" />
+                  <Can perm="property.edit">
+                    <button
+                      type="button"
+                      className="absolute inset-0 flex items-center justify-center bg-ink-900/50 text-white opacity-0 group-hover:opacity-100 transition"
+                      onClick={() => id && void delImg.mutateAsync({ id, url })}
+                      aria-label="Remove photo"
+                    >
+                      <X size={16} />
+                    </button>
+                  </Can>
+                </div>
+              ))}
+              {canEdit && (p.images?.length || 0) < MAX_PROPERTY_IMAGES && (
+                <button
+                  type="button"
+                  className="btn-secondary text-xs h-16 px-2 inline-flex items-center gap-1"
+                  onClick={() => fileRef.current?.click()}
+                >
+                  <ImagePlus size={14} /> Add photo
+                </button>
+              )}
+            </div>
+          </div>
           <div className="p-5">
             <div className="flex items-center gap-3">
               <span className="text-[11px] font-bold tracking-wider text-brand-700">{p.code}</span>
@@ -112,6 +175,16 @@ export function PropertyDetailsPage() {
           ) : <p className="text-sm text-ink-500 py-6 text-center">No invoices yet.</p>}
         </Card>
       </div>
+
+      <ImageCropModal
+        open={cropOpen}
+        onClose={() => {
+          setCropOpen(false);
+          setCropSrc(null);
+        }}
+        imageSrc={cropSrc}
+        onCropped={onCropped}
+      />
     </>
   );
 }
