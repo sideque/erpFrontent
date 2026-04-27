@@ -12,7 +12,7 @@ export function ForbiddenPage() {
         </div>
         <h1 className="mt-4 text-xl font-bold text-ink-900">Access denied</h1>
         <p className="mt-2 text-sm text-ink-600">
-          Your role <span className="font-semibold text-ink-900">{role?.replaceAll('_', ' ') || '—'}</span> doesn't have permission
+          Your role <span className="font-semibold text-ink-900">{role?.replace(/_/g, ' ') || '—'}</span> doesn't have permission
           to view this section. Please contact a Super Admin if you need access.
         </p>
         <Link to="/dashboard" className="btn-primary mt-6 mx-auto">

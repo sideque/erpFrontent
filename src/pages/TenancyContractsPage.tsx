@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useTenancyContracts, useCreateTenancyContract, useProperties, useTenants } from '@entities/index';
 import { PageHeader } from '@shared/ui/PageHeader';
@@ -12,9 +13,9 @@ import { Can } from '@shared/auth/useCan';
 import { formatAed, formatDate } from '@shared/lib/format';
 
 export function TenancyContractsPage() {
-  const { data } = useTenancyContracts({ limit: 100 });
-  const { data: props } = useProperties({ status: 'AVAILABLE', limit: 200 });
-  const { data: tenants } = useTenants({ limit: 200 });
+  const { data, isLoading } = useTenancyContracts({ limit: 100 });
+  const { data: props, isLoading: isLoadingProps } = useProperties({ status: 'AVAILABLE,MANAGED', limit: 200 });
+  const { data: tenants, isLoading: isLoadingTenants } = useTenants({ limit: 200 });
   const create = useCreateTenancyContract();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>({
@@ -24,9 +25,13 @@ export function TenancyContractsPage() {
     annualRent: 0,
     paymentSchedule: 'MONTHLY',
     securityDeposit: 0,
+    rentDueDate: 1,
+    lateFee: 0,
+    gracePeriodDays: 0,
     startDate: '',
     endDate: '',
     rules: 'No pets. No smoking inside.',
+    notes: '',
   });
 
   const submit = async (e: FormEvent) => {
@@ -36,6 +41,9 @@ export function TenancyContractsPage() {
         ...form,
         annualRent: Number(form.annualRent),
         securityDeposit: Number(form.securityDeposit),
+        rentDueDate: Number(form.rentDueDate),
+        lateFee: Number(form.lateFee),
+        gracePeriodDays: Number(form.gracePeriodDays),
       });
       toast.success('Tenancy contract created. Invoices generated.');
       setOpen(false);
@@ -43,7 +51,7 @@ export function TenancyContractsPage() {
   };
 
   const cols: Column<any>[] = [
-    { key: 'code', header: 'Contract', render: (c) => <span className="font-semibold">{c.code}</span> },
+    { key: 'code', header: 'Contract', render: (c) => <Link to={`/tenancy-contracts/${c._id}`} className="font-semibold text-brand-700 hover:underline">{c.code}</Link> },
     { key: 'property', header: 'Property', render: (c) => <span>{c.property?.name}</span> },
     { key: 'tenant', header: 'Tenant', render: (c) => (
       <div className="flex items-center gap-2"><Avatar src={c.tenant?.avatar} name={c.tenant?.name} size={28} />
@@ -66,7 +74,7 @@ export function TenancyContractsPage() {
           </Can>
         }
       />
-      <Table columns={cols} rows={data?.data || []} />
+      <Table columns={cols} rows={data?.data || []} loading={isLoading} />
 
       <Modal open={open} onClose={() => setOpen(false)} title="New Tenancy Contract" subtitle="Invoices will be auto-generated based on the schedule." width="max-w-2xl" footer={
         <>
@@ -81,20 +89,27 @@ export function TenancyContractsPage() {
           </Select></Field>
           <Field label="Property" required>
             <Select required value={form.property} onChange={(e) => setForm({ ...form, property: e.target.value })}>
-              <option value="">— Select available property —</option>
+              <option value="">{isLoadingProps ? 'Loading properties...' : '— Select available property —'}</option>
               {props?.data?.map((p) => <option key={p._id} value={p._id}>{p.code} — {p.name}</option>)}
+              {!isLoadingProps && props?.data?.length === 0 && <option disabled>No managed/available properties found</option>}
             </Select>
           </Field>
           <Field label="Tenant" required>
             <Select required value={form.tenant} onChange={(e) => setForm({ ...form, tenant: e.target.value })}>
-              <option value="">— Select tenant —</option>
+              <option value="">{isLoadingTenants ? 'Loading tenants...' : '— Select tenant —'}</option>
               {tenants?.data?.map((t) => <option key={t._id} value={t._id}>{t.name}</option>)}
             </Select>
           </Field>
           <Field label="Annual Rent (AED)" required><Input type="number" required value={form.annualRent} onChange={(e) => setForm({ ...form, annualRent: e.target.value })} /></Field>
           <Field label="Security Deposit (AED)"><Input type="number" value={form.securityDeposit} onChange={(e) => setForm({ ...form, securityDeposit: e.target.value })} /></Field>
+          <Field label="Rent Due Date (Day)"><Input type="number" min="1" max="31" value={form.rentDueDate} onChange={(e) => setForm({ ...form, rentDueDate: e.target.value })} /></Field>
+          <Field label="Late Fee (AED)"><Input type="number" value={form.lateFee} onChange={(e) => setForm({ ...form, lateFee: e.target.value })} /></Field>
+          <Field label="Grace Period (Days)"><Input type="number" value={form.gracePeriodDays} onChange={(e) => setForm({ ...form, gracePeriodDays: e.target.value })} /></Field>
           <Field label="Start Date" required><Input type="date" required value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></Field>
           <Field label="End Date" required><Input type="date" required value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} /></Field>
+          <div className="col-span-2">
+            <Field label="Internal Notes"><Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Any specific internal notes about this tenant or contract..." /></Field>
+          </div>
         </form>
       </Modal>
     </>

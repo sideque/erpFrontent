@@ -1,7 +1,8 @@
+/// <reference types="vite/client" />
 import axios, { AxiosError } from 'axios';
 import toast from 'react-hot-toast';
 
-const baseURL = import.meta.env.VITE_API_URL || 'https://erpbackent-1.onrender.com/api';
+const baseURL = import.meta.env.VITE_API_URL ?? '/api';
 
 export const api = axios.create({
   baseURL,
@@ -12,8 +13,10 @@ export const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('auth_token');
   if (token) {
-    config.headers = config.headers ?? {};
-    (config.headers as any).Authorization = `Bearer ${token}`;
+    if (!config.headers) {
+      config.headers = new axios.AxiosHeaders();
+    }
+    config.headers.set('Authorization', `Bearer ${token}`);
   }
   return config;
 });

@@ -40,10 +40,10 @@ export function LoginPage() {
 
           <form onSubmit={submit} className="mt-8 space-y-4">
             <Field label="Email">
-              <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" />
+              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" />
             </Field>
             <Field label="Password">
-              <Input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
             </Field>
             <button type="submit" disabled={loading} className="btn-primary w-full py-2.5">
               {loading ? 'Signing in…' : 'Sign in'}

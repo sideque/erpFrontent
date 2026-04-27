@@ -56,7 +56,7 @@ export function UserMenu() {
           <div className="px-3 py-3 border-b border-line">
             <div className="text-[11px] uppercase tracking-wider text-ink-400 font-semibold">Signed in as</div>
             <div className="mt-0.5 text-sm font-semibold text-ink-900 truncate">{user?.email}</div>
-            <div className="mt-0.5 text-[11px] text-brand-700 font-semibold">{user?.role.replaceAll('_', ' ')}</div>
+            <div className="mt-0.5 text-[11px] text-brand-700 font-semibold">{user?.role.replace(/_/g, ' ')}</div>
           </div>
           <div className="py-1">
             <MenuItem icon={<UserCircle2 size={16} />} label="My profile" onClick={() => { setOpen(false); nav('/settings'); }} />
