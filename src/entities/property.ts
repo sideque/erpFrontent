@@ -6,7 +6,7 @@ export interface Property {
   code: string;
   name: string;
   type: 'APARTMENT' | 'VILLA' | 'OFFICE' | 'LAND';
-  status: 'AVAILABLE' | 'RENTED' | 'UNDER_MAINTENANCE';
+  status: 'AVAILABLE' | 'RENTED' | 'UNDER_MAINTENANCE' | 'MANAGED';
   location?: { area?: string; community?: string; address?: string; city?: string };
   sizeSqm?: number;
   bedrooms?: number;

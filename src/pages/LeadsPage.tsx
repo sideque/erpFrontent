@@ -49,7 +49,7 @@ export function LeadsPage() {
         {STAGES.map((stage) => (
           <div key={stage} className="card p-3 min-h-[400px]">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-ink-700">{stage.replaceAll('_', ' ')}</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-ink-700">{stage.replace(/_/g, ' ')}</span>
               <span className="text-xs text-ink-400">{data?.[stage]?.length || 0}</span>
             </div>
             <div className="space-y-2">
@@ -69,7 +69,7 @@ export function LeadsPage() {
                   {l.nextFollowUp && <div className="mt-1 text-[11px] text-ink-400">Follow up: {formatDate(l.nextFollowUp)}</div>}
                   {canEdit && (
                     <select className="select !py-1 text-xs mt-2" value={l.stage} onChange={(e) => moveTo(l, e.target.value)}>
-                      {STAGES.map((s) => <option key={s} value={s}>{s.replaceAll('_', ' ')}</option>)}
+                      {STAGES.map((s) => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
                     </select>
                   )}
                 </div>
