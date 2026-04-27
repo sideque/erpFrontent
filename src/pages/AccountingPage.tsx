@@ -483,6 +483,7 @@ function JournalEntriesTab({ onNew, canCreate }: { onNew: () => void; canCreate:
   const [status, setStatus] = useState('');
   const { data, isLoading } = useJournalEntries({ type, status });
   const cancel = useCancelJournalEntry();
+  const navigate = useNavigate();
 
   const onCancel = async (id: string, num: string) => {
     if (!confirm(`Cancel ${num}? A reversing entry will be posted to the ledger.`)) return;
@@ -512,7 +513,7 @@ function JournalEntriesTab({ onNew, canCreate }: { onNew: () => void; canCreate:
           <option value="CANCELLED">Cancelled</option>
         </select>
         {canCreate && (
-          <button className="btn-primary ml-auto" onClick={onNew}>
+          <button className="btn-primary ml-auto" onClick={() => navigate("/accounting/journal-entry")}>
             <Plus size={16} /> New Journal Entry
           </button>
         )}
