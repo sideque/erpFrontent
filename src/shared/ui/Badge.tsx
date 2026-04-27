@@ -23,5 +23,5 @@ export function StatusBadge({ status }: { status?: string }) {
     ['DISABLED', 'OVERDUE', 'TERMINATED', 'CANCELLED', 'CLOSED_LOST', 'URGENT'].includes(s) ? 'red' :
     ['PARTIAL', 'PENDING', 'EXPIRED', 'UNDER_MAINTENANCE', 'IN_PROGRESS', 'DRAFT', 'NEGOTIATION'].includes(s) ? 'amber' :
     ['NEW', 'CONTACTED', 'VIEWING', 'OPEN', 'ASSIGNED', 'RENTED', 'RENEWED'].includes(s) ? 'blue' : 'gray';
-  return <Badge tone={tone}>{s.replaceAll('_', ' ')}</Badge>;
+  return <Badge tone={tone}>{s.replace(/_/g, ' ')}</Badge>;
 }

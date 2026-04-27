@@ -13,7 +13,9 @@ import { OwnersPage } from '@pages/OwnersPage';
 import { OwnerProfilePage } from '@pages/OwnerProfilePage';
 import { TenantsPage } from '@pages/TenantsPage';
 import { ManagementContractsPage } from '@pages/ManagementContractsPage';
+import { ManagementContractDetailsPage } from '@pages/ManagementContractDetailsPage';
 import { TenancyContractsPage } from '@pages/TenancyContractsPage';
+import { TenancyContractDetailsPage } from '@pages/TenancyContractDetailsPage';
 import { RentPage } from '@pages/RentPage';
 import { InvoiceDetailsPage } from '@pages/InvoiceDetailsPage';
 import { ExpensesPage } from '@pages/ExpensesPage';
@@ -62,7 +64,9 @@ export function App() {
             <Route path="/owners/:id" element={<RequirePermission perm="owner.view"><OwnerProfilePage /></RequirePermission>} />
             <Route path="/tenants" element={<RequirePermission perm="tenant.view"><TenantsPage /></RequirePermission>} />
             <Route path="/management-contracts" element={<RequirePermission perm="mgmtContract.view"><ManagementContractsPage /></RequirePermission>} />
+            <Route path="/management-contracts/:id" element={<RequirePermission perm="mgmtContract.view"><ManagementContractDetailsPage /></RequirePermission>} />
             <Route path="/tenancy-contracts" element={<RequirePermission perm="tenancyContract.view"><TenancyContractsPage /></RequirePermission>} />
+            <Route path="/tenancy-contracts/:id" element={<RequirePermission perm="tenancyContract.view"><TenancyContractDetailsPage /></RequirePermission>} />
             <Route path="/rent" element={<RequirePermission perm="rent.view"><RentPage /></RequirePermission>} />
             <Route path="/rent/invoices/:id" element={<RequirePermission perm="rent.view"><InvoiceDetailsPage /></RequirePermission>} />
             <Route path="/expenses" element={<RequirePermission perm="expense.view"><ExpensesPage /></RequirePermission>} />

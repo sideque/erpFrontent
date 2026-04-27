@@ -28,11 +28,18 @@ export const useAuth = create<AuthState>((set) => ({
   loading: false,
   hydrated: false,
 
-  login: async (email, password) => {
+  login: async (email, _password) => {
     set({ loading: true });
     try {
-      const { data } = await api.post('/auth/login', { email, password });
-      const { user, token } = data.data;
+      // Mock successful login for any credentials as requested
+      const user: AuthUser = {
+        _id: 'dummy-id',
+        name: 'Admin User',
+        email: email || 'admin@example.com',
+        role: 'SUPER_ADMIN'
+      };
+      const token = 'dummy-token';
+
       localStorage.setItem('auth_token', token);
       localStorage.setItem('auth_user', JSON.stringify(user));
       set({ user, token, loading: false });
@@ -65,6 +72,10 @@ export const useAuth = create<AuthState>((set) => ({
     try {
       const user = JSON.parse(userStr);
       set({ user, token, hydrated: true });
+      
+      // Skip backend verification for dummy tokens
+      if (token === 'dummy-token') return;
+
       const { data } = await api.get('/auth/me');
       set({ user: data.data });
       localStorage.setItem('auth_user', JSON.stringify(data.data));
