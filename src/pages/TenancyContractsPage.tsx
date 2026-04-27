@@ -89,13 +89,14 @@ export function TenancyContractsPage() {
           </Select></Field>
           <Field label="Property" required>
             <Select required value={form.property} onChange={(e) => setForm({ ...form, property: e.target.value })}>
-              <option value="">— Select available property —</option>
+              <option value="">{isLoadingProps ? 'Loading properties...' : '— Select available property —'}</option>
               {props?.data?.map((p) => <option key={p._id} value={p._id}>{p.code} — {p.name}</option>)}
+              {!isLoadingProps && props?.data?.length === 0 && <option disabled>No managed/available properties found</option>}
             </Select>
           </Field>
           <Field label="Tenant" required>
             <Select required value={form.tenant} onChange={(e) => setForm({ ...form, tenant: e.target.value })}>
-              <option value="">— Select tenant —</option>
+              <option value="">{isLoadingTenants ? 'Loading tenants...' : '— Select tenant —'}</option>
               {tenants?.data?.map((t) => <option key={t._id} value={t._id}>{t.name}</option>)}
             </Select>
           </Field>
